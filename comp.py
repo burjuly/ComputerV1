@@ -1,9 +1,5 @@
 import re
 
-def leave():
-    print('Invalid input')
-    exit()
-
 def solve_line_eq(coef):
     print(f'КОЭФФИЦИЕНТЫ{coef}')
     b = coef[1]
@@ -78,31 +74,6 @@ def is_number(num):
     except ValueError:
         return False
 
-def check_term(term):
-    degree_x = ['X^0', 'X', 'X^1', 'X^2']
-    coef, var = '', ''
-    if len(term) == 1: # X, 5X, 3X^2, -X
-        if term[0].find('X') != -1:
-            print('CASE2')
-            term = term[0].replace('X', ' X').split(' ')
-            print(f'TERM0 {term[0]} и TERM1 {term[1]}')
-            var = term[1]
-            if term[0] == '':
-                coef = 1
-            elif term[0] == '-':
-                coef = -1
-            else:
-                coef = term[0]
-            return coef, var
-        else: # 10 ...
-            if is_number(term[0]):
-                return term[0], None
-    elif len(term) == 2:
-        if is_number(term[0]) and term[1] in degree_x:
-            return term[0], term[1]
-        if term[1] not in degree_x:
-            print("Wrong term")
-
 def edit_dic(dic):
     if 'X^1' in dic and 'X' in dic:
         val = dic.get('X') + dic.get('X^1')
@@ -114,24 +85,49 @@ def edit_dic(dic):
         del dic[None]
     return(dic)
 
-def valid(eq):
+def get_variable_coefficient(i):
+    if '*' not in i: #Если нет умножения, то добавляем, чтобы потом рассплитить по *
+        i = re.sub('X', '*X', i)
+    i = i.split('*')        
+    #TODO если есть точка в коэффициенте сделать float, если нет - int
+    
+    if i[0] == '-' or i[0] == '':
+        coef = 1 if i[0] == '' else -1
+    else:
+        coef = float(i[0])
+    if i[1] == 'X':
+        var = 'X^1'
+    else:
+        var = i[1]
+    return(coef, var)
+
+def validation(eq):
     oppos = 1
-    coef, var = '', ''
     dic = {}
-    print(eq)
     if eq.count('') > 0 or eq.count('=') != 1:
-        leave()
         print('Invalid input')
         return
     for i in eq:
         if i == '=':
             oppos = -1
             continue
-        elif i.count('*') > 1:
-            print('Invalid input. Too many characters "*"')
-        else:
-            i = i.split('*')
-            coef, var = check_term(i)
+        # Число (положительное, отрицательное, float)
+        elif len(re.findall(r'^[-]?[0-9]+[.]?[0-9]*$', i)):
+            coef = float(i)
+            var = 'X^0'
+        # Слагаемое с переменной
+        elif 'X' in i:
+            if '.' in i: # Есть float коэффициент
+                if len(re.findall(r'^[-]?[0-9]+[.][0-9]+[*]?[X][\^0-9]*$', i)) != 1:
+                    print(1)
+                    print('Wrong type of term')
+                    exit()
+            else:
+                if len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i)) != 1:
+                    print(2)
+                    print('Wrong type of term')
+                    exit() 
+            coef, var = get_variable_coefficient(i)
             print(f'Слагаемое {i}')
             print(f'Коэффициент {coef} Переменная {var}')
             if var in dic:
@@ -141,7 +137,8 @@ def valid(eq):
                 dic.update({var: float(coef) * oppos})
             print(dic)
     dic = edit_dic(dic)
-    return(dic)
+    print(f'dic {dic}')
+    return(dic)    
 
 def print_reduce_form(dic):
     a = dic.get('X^2') if 'X^2' in dic else 0
@@ -155,13 +152,18 @@ def print_reduce_form(dic):
 
 def main():
     print('Введите уравнение: ', end='')
-    eq = input()
-    if not eq:
+    equation = input()
+    if not equation:
         print('Empty input')
-        return
-    eq = eq.replace(' ', '').replace('-', '+-').replace('=', '+=+')
-    eq = eq.split('+')
-    dic = valid(eq)
+        exit()
+    equation = re.sub(r'\s+', '', equation).replace('-', '+-').replace('=', '+=+')
+    if len(re.findall('=', equation)) != 1:
+        print('Wrong number =')
+        exit()
+    equation = equation.split('+')
+    print(equation)
+ 
+    dic = validation(equation)
     coef = print_reduce_form(dic)
     solve_eq(coef)
 

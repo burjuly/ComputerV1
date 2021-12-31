@@ -1,14 +1,14 @@
 import re
 
 def solve_line_eq(coef):
-    print(f'КОЭФФИЦИЕНТЫ{coef}')
+    print(f'Сoefficient{coef}')
     b = coef[1]
     c = coef[2]
     print('Polynomial degree: 1')
     if b == 0 and c == 0:
-        print('Уравнение имеет бесконечно много решений')
+        print('An infinite number of solutions')
     elif b == 0 and c != 0:
-        print('Уравнение не имеет решений')
+        print('The equation has no solutions')
     elif b != 0 and c != 0:
         res = float((-1) * c / b)
         print(res) 
@@ -27,7 +27,7 @@ def sqrt(D):
 
 def display_negative_discriminant(a, b , c, D):
     print('Discriminant < 0')
-    print('Нет решений')
+    print('The equation has no solutions')
     #sq = sqrt(-D)
     #print('The two solutions are:')
     #print(-b / (2*a), '+', sq / (2*a), '*', 'i' )

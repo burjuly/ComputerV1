@@ -1,7 +1,7 @@
 import re
 
 def solve_line_eq(coef):
-    #print(f'КОЭФФИЦИЕНТЫ{coef}')
+    print(f'КОЭФФИЦИЕНТЫ{coef}')
     b = coef[1]
     c = coef[2]
     print('Polynomial degree: 1')
@@ -62,6 +62,7 @@ def solve_quadratic_eq(coef):
 
 def solve_eq(coef):
     if coef[0] == 0:
+        print('Solve liner eq')
         solve_line_eq(coef)
     else:
         solve_quadratic_eq(coef)
@@ -95,39 +96,53 @@ def sort_dic(dic):
     sort_d = sorted(dic.items(), key=lambda x: x[0])
     return(dict(sort_d))
 
+def find_error(i):
+    print('Errors were detected in the term')
+    if len(re.findall('\*', i)) > 1:
+        print('Too many characters "*" ')
+    exit()
+
+def error_empty_side(eq):
+    print('Invalid input. ', end = '')
+    if eq[0] == '':
+        print('Empty left side.')
+    else:
+        print('Empty right side.')
+    exit()
+
 def validation(eq):
     oppos = 1
     dic = {}
-    if eq.count('') > 0 or eq.count('=') != 1:
-        print('Invalid input')
-        return
+    print(f'eq = {eq}')
+    if eq.count('') > 0:
+        error_empty_side(eq)
     for i in eq:
         if i == '=':
             oppos = -1
             continue
         # Число (положительное, отрицательное, float)
         elif len(re.findall(r'^[-]?[0-9]+[.]?[0-9]*$', i)):
+            print(f'i = {i}')
             coef = float(i)
             var = 'X^0'
         # Слагаемое с переменной
         elif 'X' in i:
             if '.' in i: # Есть float коэффициент
                 if len(re.findall(r'^[-]?[0-9]+[.][0-9]+[*]?[X][\^0-9]*$', i)) != 1:
-                    print(1)
-                    print('Wrong type of term')
-                    exit()
+                    find_error(i)
             else:
                 if len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i)) != 1:
-                    l = len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i))
-                    print(2)
-                    print('Wrong type of term')
-                    exit() 
+                    #l = len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i))
+                    find_error(i)
+                    #print('Wrong type of term')
+                    #exit() 
             coef, var = get_variable_coefficient(i)
-            if var in dic:
-                new = dic.get(var) + (float(coef) * oppos)
-                dic.update({var: new})
-            else:
-                dic.update({var: float(coef) * oppos})
+        if var in dic:
+            new = dic.get(var) + (float(coef) * oppos)
+            dic.update({var: new})
+        else:
+            dic.update({var: float(coef) * oppos})
+    print(f'dic = {dic}')
     dic = sort_dic(dic)
     print(f'dic {dic}')
     return(dic)    
@@ -154,6 +169,9 @@ def print_reduce_form(dic):
     return([a, b, c])
 
 def make_decision(dic):
+    #TODO дополнить
+    if dic is None:
+        exit()
     i = len(dic) - 1
     keys = list(dic.keys())
     while i >= 0:
@@ -166,6 +184,10 @@ def make_decision(dic):
             print(f'The polynomial degree is stricly greater than 2, I can\'t solve.')
             exit()
         i -= 1
+def check_symbols(eq):
+    if len(re.findall('[^X\^0-9\+-=\*]', eq)) > 0:
+        print('Invalid characters in string')
+        exit()
 
 def main():
     print('Enter equation: ', end='')
@@ -173,10 +195,12 @@ def main():
     if not equation:
         print('Empty input')
         exit()
-    equation = re.sub(r'\s+', '', equation).replace('-', '+-').replace('=', '+=+')
+    equation = re.sub(r'\s+', '', equation)
+    equation = re.sub(r'\b[-]', '+-', equation).replace('=', '+=+')
     if len(re.findall('=', equation)) != 1:
-        print('Wrong number =')
+        print('Wrong number of characters "=" ')
         exit()
+    check_symbols(equation)
     equation = equation.split('+')
     dic = validation(equation)
     make_decision(dic)

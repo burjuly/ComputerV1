@@ -1,7 +1,7 @@
 import re
 
 def solve_line_eq(coef):
-    print(f'КОЭФФИЦИЕНТЫ{coef}')
+    #print(f'КОЭФФИЦИЕНТЫ{coef}')
     b = coef[1]
     c = coef[2]
     print('Polynomial degree: 1')
@@ -17,7 +17,7 @@ def sqrt(D):
     #print("КОРЕНЬ ИЗВЛЕКАЕТСЯ...")
     x = 1
     while x <= D:
-        print(x)
+        #print(x)
         x = (x + D / x) / 2
         if int(x) * int(x) == D: 
             return (int(x))
@@ -40,7 +40,7 @@ def display_zero_discriminant(a, b, c):
 
 def display_positive_discriminant(a, b, c, D):
     sq = sqrt(D)
-    print(f'КОРЕНЬ ИЗ ДИСКР {sq} ')
+    #print(f'КОРЕНЬ ИЗ ДИСКР {sq} ')
     print('Discriminant is strictly positive, the two solutions are:')
     print((-b + sq) / (2 * a))
     print((-b - sq) / (2 * a))
@@ -74,17 +74,6 @@ def is_number(num):
     except ValueError:
         return False
 
-def edit_dic(dic):
-    if 'X^1' in dic and 'X' in dic:
-        val = dic.get('X') + dic.get('X^1')
-        dic.update({'X^1': val})
-        del dic['X'] 
-    if None in dic and 'X^0' in dic:
-        val = dic.get(None) + dic.get('X^0')
-        dic.update({'X^0': val})
-        del dic[None]
-    return(dic)
-
 def get_variable_coefficient(i):
     if '*' not in i: #Если нет умножения, то добавляем, чтобы потом рассплитить по *
         i = re.sub('X', '*X', i)
@@ -100,6 +89,11 @@ def get_variable_coefficient(i):
     else:
         var = i[1]
     return(coef, var)
+
+def sort_dic(dic):
+    sort_d = {}
+    sort_d = sorted(dic.items(), key=lambda x: x[0])
+    return(dict(sort_d))
 
 def validation(eq):
     oppos = 1
@@ -124,34 +118,57 @@ def validation(eq):
                     exit()
             else:
                 if len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i)) != 1:
+                    l = len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i))
                     print(2)
                     print('Wrong type of term')
                     exit() 
             coef, var = get_variable_coefficient(i)
-            print(f'Слагаемое {i}')
-            print(f'Коэффициент {coef} Переменная {var}')
             if var in dic:
                 new = dic.get(var) + (float(coef) * oppos)
                 dic.update({var: new})
             else:
                 dic.update({var: float(coef) * oppos})
-            print(dic)
-    dic = edit_dic(dic)
+    dic = sort_dic(dic)
     print(f'dic {dic}')
     return(dic)    
 
 def print_reduce_form(dic):
+    flag = 0
+    print(f'Reduced form: ', end='')
+    for d in dic:
+        coef = dic[d]
+        if coef < 0:
+            print(f'- ', end='')
+            coef = coef * (-1)
+        elif flag == 1: #не добавлять +, если в начале строки положительный коэффициент
+            print(f'+ ', end='')
+        flag = 1
+        print(f'{coef} * {d} ', end = '')
+    print(f'= 0')
     a = dic.get('X^2') if 'X^2' in dic else 0
     b = dic.get('X^1') if 'X^1' in dic else 0
     c = dic.get('X^0') if 'X^0' in dic else 0   
-    print('a =', a)
-    print('b =', b)
-    print('c =', c)
-    print(f"Reduced form: {a} * X^2 + {b} * X^1 + {c} * X^0 = 0")
+    #print('a =', a)
+    #print('b =', b)
+    #print('c =', c)
     return([a, b, c])
 
+def make_decision(dic):
+    i = len(dic) - 1
+    keys = list(dic.keys())
+    while i >= 0:
+        if dic[keys[i]] == 0:
+            i -= 1
+            continue
+        power = int(re.sub(r'X[\^]', '', keys[i]))
+        if power > 2:
+            print(f'Polynomial degree: {power}')
+            print(f'The polynomial degree is stricly greater than 2, I can\'t solve.')
+            exit()
+        i -= 1
+
 def main():
-    print('Введите уравнение: ', end='')
+    print('Enter equation: ', end='')
     equation = input()
     if not equation:
         print('Empty input')
@@ -161,9 +178,8 @@ def main():
         print('Wrong number =')
         exit()
     equation = equation.split('+')
-    print(equation)
- 
     dic = validation(equation)
+    make_decision(dic)
     coef = print_reduce_form(dic)
     solve_eq(coef)
 

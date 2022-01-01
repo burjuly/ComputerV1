@@ -1,7 +1,8 @@
 import re
+import argparse
 
-def solve_line_eq(coef):
-    print(f'Сoefficient{coef}')
+def solve_line_eq(coef, args):
+    #print(f'Сoefficient{coef}')
     b = coef[1]
     c = coef[2]
     print('Polynomial degree: 1')
@@ -10,6 +11,10 @@ def solve_line_eq(coef):
     elif b == 0 and c != 0:
         print('The equation has no solutions')
     elif b != 0 and c != 0:
+        if args.irrational:
+            c = c * (-1)
+            print(f'{int(c)} / {int(b)}')
+            return()
         res = float((-1) * c / b)
         print(res) 
 
@@ -47,7 +52,6 @@ def display_positive_discriminant(a, b, c, D):
 
 def solve_quadratic_eq(coef):
     print('Polynomial degree: 2')
-    print(f'Коэффициенты {coef}')
     a = coef[0]
     b = coef[1]
     c = coef[2]
@@ -60,10 +64,9 @@ def solve_quadratic_eq(coef):
     else:
         display_positive_discriminant(a, b, c, D)
 
-def solve_eq(coef):
+def solve_eq(coef, args):
     if coef[0] == 0:
-        print('Solve liner eq')
-        solve_line_eq(coef)
+        solve_line_eq(coef, args)
     else:
         solve_quadratic_eq(coef)
 
@@ -97,7 +100,7 @@ def sort_dic(dic):
     return(dict(sort_d))
 
 def find_error(i):
-    print('Errors were detected in the term')
+    print('Error was detected in the term')
     if len(re.findall('\*', i)) > 1:
         print('Too many characters "*" ')
     exit()
@@ -106,14 +109,15 @@ def error_empty_side(eq):
     print('Invalid input. ', end = '')
     if eq[0] == '':
         print('Empty left side.')
-    else:
+    elif eq[-1] == '':
         print('Empty right side.')
+    else:
+        print('Too many characters "+" ')
     exit()
 
 def validation(eq):
     oppos = 1
     dic = {}
-    print(f'eq = {eq}')
     if eq.count('') > 0:
         error_empty_side(eq)
     for i in eq:
@@ -122,7 +126,6 @@ def validation(eq):
             continue
         # Число (положительное, отрицательное, float)
         elif len(re.findall(r'^[-]?[0-9]+[.]?[0-9]*$', i)):
-            print(f'i = {i}')
             coef = float(i)
             var = 'X^0'
         # Слагаемое с переменной
@@ -132,19 +135,14 @@ def validation(eq):
                     find_error(i)
             else:
                 if len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i)) != 1:
-                    #l = len(re.findall(r'^[-]?[0-9]*[*]?[X][\^0-9]*$', i))
                     find_error(i)
-                    #print('Wrong type of term')
-                    #exit() 
             coef, var = get_variable_coefficient(i)
         if var in dic:
             new = dic.get(var) + (float(coef) * oppos)
             dic.update({var: new})
         else:
             dic.update({var: float(coef) * oppos})
-    print(f'dic = {dic}')
     dic = sort_dic(dic)
-    print(f'dic {dic}')
     return(dic)    
 
 def print_reduce_form(dic):
@@ -184,12 +182,18 @@ def make_decision(dic):
             print(f'The polynomial degree is stricly greater than 2, I can\'t solve.')
             exit()
         i -= 1
+
 def check_symbols(eq):
     if len(re.findall('[^X\^0-9\+-=\*]', eq)) > 0:
         print('Invalid characters in string')
         exit()
 
 def main():
+    parser = argparse.ArgumentParser(description="Solve equation")
+    #parser.add_argument("-d", dest="detail", default=False)
+    parser.add_argument("-i", dest="irrational", default=False)
+    args = parser.parse_args()
+
     print('Enter equation: ', end='')
     equation = input()
     if not equation:
@@ -205,7 +209,7 @@ def main():
     dic = validation(equation)
     make_decision(dic)
     coef = print_reduce_form(dic)
-    solve_eq(coef)
+    solve_eq(coef, args)
 
 if __name__== "__main__":
     main()
